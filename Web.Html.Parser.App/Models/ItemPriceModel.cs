@@ -1,4 +1,5 @@
 ﻿namespace Web.Html.Parser.App.Models;
+
 public class ItemPriceModel
 {
     public Guid Id { get; set; }

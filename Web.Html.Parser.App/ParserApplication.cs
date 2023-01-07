@@ -79,21 +79,67 @@ public class ParserApplication
                     var userUrl = item.GetAttribute("href");
                     var userWebId = userUrl.Substring(userUrl.IndexOf('=') + 1);
                     var userName = item
-                                   .Children
+                                   ?.Children
                                    .Where(child => child.GetAttribute("class") == "tc-user")
                                    .FirstOrDefault()
-                                   .Children.FirstOrDefault()
-                                   .Children
+                                   ?.Children
+                                   .Where(child => child.GetAttribute("class").Contains("media-user"))
+                                   .FirstOrDefault()
+                                   ?.Children
                                    .Where(child => child.GetAttribute("class") == "media-body")
                                    .FirstOrDefault()
-                                   .Children
+                                   ?.Children
                                    .Where(child => child.GetAttribute("class") == "media-user-name")
                                    .FirstOrDefault()
                                    .TextContent
-                                   .Trim();
+                                   ?.Trim();
 
                     //_parserManager.AddUpdateUser(userWebId, userName);
                     //return: userId
+
+                    var description = item
+                                      ?.Children
+                                      .Where(child => child.GetAttribute("class") == "tc-desc")
+                                      .FirstOrDefault()
+                                      ?.TextContent
+                                      ?.Trim()
+                                      ?.ToLower();
+
+                    //_parserManager.AddUpdateItem(userId, gameId, description);
+                    //return: itemId
+
+                    var price = item
+                                .Children
+                                .Where(child => child.GetAttribute("class") == "tc-price")
+                                .Select(item =>
+                                {
+                                    double.TryParse(
+                                        item.GetAttribute("data-s"),
+                                        NumberStyles.Number,
+                                        CultureInfo.InvariantCulture,
+                                        out double cost);
+
+                                    return cost;
+                                })
+                                .FirstOrDefault();
+
+                    var count = item
+                                .Children
+                                .Where(child => child.GetAttribute("class").Contains("tc-amount"))
+                                .Select(item =>
+                                {
+                                    int.TryParse(
+                                        item.TextContent,
+                                        NumberStyles.Number,
+                                        CultureInfo.InvariantCulture,
+                                        out int cost);
+
+                                    return cost;
+                                })
+                                .FirstOrDefault();
+
+                    //_parserManager.AddUpdateItemPrice(itemId, price, count);
+                    //return: itemId
                 }
             }
         }

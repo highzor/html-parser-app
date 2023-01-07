@@ -1,5 +1,6 @@
 ﻿using AngleSharp;
 using AngleSharp.Dom;
+using Web.Html.Parser.App.Models;
 
 namespace Web.Html.Parser.App.Domain;
 
@@ -19,6 +20,7 @@ public class ParserManager : IParserManager
         }
         catch (Exception ex)
         {
+            Console.WriteLine(ex.Message);
             return null;
         }
     }

@@ -24,7 +24,7 @@ public class ParserApplication
 
                 foreach (var gameItem in gameItems)
                 {
-                    var gameItemHref = await _parserManager.AddUpdateGameItem(gameId, gameItem);
+                    var gameItemHref = await _parserManager.AddGameItem(gameId, gameItem);
                     document = await _parserManager.GetDocument(gameItemHref);
                     var items = _parserManager.GetItems(document);
 

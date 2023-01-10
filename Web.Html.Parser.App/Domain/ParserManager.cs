@@ -11,7 +11,7 @@ public interface IParserManager
     IList<IElement> GetGames(IDocument document);
     Task<Guid> AddGetGame(IElement game);
     IList<IElement> GetGameItems(IElement game);
-    Task<string> AddUpdateGameItem(Guid gameId, IElement gameItem);
+    Task<string> AddGameItem(Guid gameId, IElement gameItem);
     IList<IElement> GetItems(IDocument document);
     Task<Guid> AddUpdateUser(IElement item);
     string GetItemDescription(IElement item);
@@ -103,7 +103,7 @@ public class ParserManager : IParserManager
             return null;
         }
     }
-    public async Task<string> AddUpdateGameItem(Guid gameId, IElement gameItem)
+    public async Task<string> AddGameItem(Guid gameId, IElement gameItem)
     {
         try
         {
@@ -118,7 +118,7 @@ public class ParserManager : IParserManager
                                 .Trim();
 
             Console.WriteLine($"process is executing at the game item: {gameItemTitle}");
-            await _parserRepository.AddUpdateGameItem(gameId, gameItemTitle);
+            var gameItemId = await _parserRepository.AddGameItem(gameId, gameItemTitle);
 
             return gameItemHref;
         }

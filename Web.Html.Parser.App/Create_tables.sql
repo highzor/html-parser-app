@@ -19,11 +19,11 @@ CREATE TABLE public.game_item
     PRIMARY KEY (id)
 );
 
-CREATE TABLE public.user
+CREATE TABLE public.users
 (
     id uuid NOT NULL,
     user_web_id integer NOT NULL,
-    userName text,
+    user_name text,
     PRIMARY KEY (id)
 );
 
@@ -42,6 +42,7 @@ CREATE TABLE public.item_price
     item_id uuid NOT NULL,
 	price double precision NOT NULL,
 	count integer NOT NULL,
+    is_single boolean NOT NULL,
     date_time_update time with time zone NOT NULL,
     PRIMARY KEY (id)
 );

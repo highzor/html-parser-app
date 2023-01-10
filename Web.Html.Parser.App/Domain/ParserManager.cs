@@ -13,10 +13,10 @@ public interface IParserManager
     IList<IElement> GetGameItems(IElement game);
     Task<string> AddGameItem(Guid gameId, IElement gameItem);
     IList<IElement> GetItems(IDocument document);
-    Task<Guid> AddUpdateUser(IElement item);
+    Task<Guid> AddGetUser(IElement item);
     string GetItemDescription(IElement item);
-    Task<Guid> AddUpdateItem(Guid userId, Guid gameId, string description);
-    Task<Guid> AddUpdateItemPrice(Guid itemId, IElement item);
+    Task<Guid> AddGetItem(Guid userId, Guid gameId, string description);
+    Task<Guid> AddGetItemPrice(Guid itemId, IElement item);
 }
 
 public class ParserManager : IParserManager
@@ -75,7 +75,7 @@ public class ParserManager : IParserManager
                            .Trim();
 
             int.TryParse(gameDivContainer?.GetAttribute("data-id"), NumberStyles.Number, CultureInfo.InvariantCulture, out int gameWebId);
-            Console.WriteLine($"process is executing at the game: {gameName}");
+            //Console.WriteLine($"process is executing at the game: {gameName}");
             return await _parserRepository.AddGetGame(gameWebId, gameName);
         }
         catch (Exception ex)
@@ -117,7 +117,7 @@ public class ParserManager : IParserManager
                                 ?.TextContent
                                 .Trim();
 
-            Console.WriteLine($"process is executing at the game item: {gameItemTitle}");
+            //Console.WriteLine($"process is executing at the game item: {gameItemTitle}");
             var gameItemId = await _parserRepository.AddGameItem(gameId, gameItemTitle);
 
             return gameItemHref;
@@ -145,7 +145,7 @@ public class ParserManager : IParserManager
         }
     }
 
-    public async Task<Guid> AddUpdateUser(IElement item)
+    public async Task<Guid> AddGetUser(IElement item)
     {
         try
         {
@@ -167,7 +167,7 @@ public class ParserManager : IParserManager
                            .TextContent
                            ?.Trim();
 
-            return await _parserRepository.AddUpdateUser(userWebId, userName);
+            return await _parserRepository.AddGetUser(userWebId, userName);
         }
         catch (Exception ex)
         {
@@ -180,13 +180,39 @@ public class ParserManager : IParserManager
     {
         try
         {
-            return item
-                   ?.Children
-                   .Where(child => child.GetAttribute("class") == "tc-desc")
-                   .FirstOrDefault()
-                   ?.TextContent
-                   ?.Trim()
-                   ?.ToLower();
+            var description = string.Empty;
+            var descriptionElement = item
+                                     ?.Children
+                                     .Where(child => child.GetAttribute("class") == "tc-desc")
+                                     .FirstOrDefault();
+
+            if (descriptionElement is not null)
+            {
+                description = descriptionElement
+                              ?.TextContent
+                              ?.Trim()
+                              ?.ToLower();
+            }
+            else
+            {
+                description = item
+                              ?.Children
+                              .Where(child => child.GetAttribute("class").Contains("tc-server"))
+                              .FirstOrDefault()
+                              ?.TextContent
+                              ?.Trim()
+                              ?.ToLower();
+
+                description += @$" -> {item
+                                       ?.Children
+                                       .Where(child => child.GetAttribute("class").Contains("tc-side"))
+                                       .FirstOrDefault()
+                                       ?.TextContent
+                                       ?.Trim()
+                                       ?.ToLower()}";
+            }
+
+            return description;
         }
         catch (Exception ex)
         {
@@ -195,11 +221,11 @@ public class ParserManager : IParserManager
         }
     }
 
-    public async Task<Guid> AddUpdateItem(Guid userId, Guid gameId, string description)
+    public async Task<Guid> AddGetItem(Guid userId, Guid gameId, string description)
     {
         try
         {
-            return await _parserRepository.AddUpdateItem(userId, gameId, description);
+            return await _parserRepository.AddGetItem(userId, gameId, description);
         }
         catch (Exception ex)
         {
@@ -208,10 +234,11 @@ public class ParserManager : IParserManager
         }
     }
 
-    public async Task<Guid> AddUpdateItemPrice(Guid itemId, IElement item)
+    public async Task<Guid> AddGetItemPrice(Guid itemId, IElement item)
     {
         try
         {
+            var isSingle = false;
             var price = item
                         .Children
                         .Where(child => child.GetAttribute("class") == "tc-price")
@@ -242,7 +269,13 @@ public class ParserManager : IParserManager
                         })
                         .FirstOrDefault();
 
-            return await _parserRepository.AddUpdateItemPrice(itemId, price, count);
+            if (count == 0)
+            {
+                isSingle = true;
+                count = 1;
+            }
+
+            return await _parserRepository.AddGetItemPrice(itemId, price, isSingle, count);
         }
         catch (Exception ex)
         {
@@ -253,18 +286,27 @@ public class ParserManager : IParserManager
 
     private int getUserWebIdFromHref(IElement item)
     {
-        var userUrl = item.GetAttribute("href");
+        var userUrl = item
+                      ?.Children
+                      .Where(child => child.GetAttribute("class") == "tc-user")
+                      .FirstOrDefault()
+                      ?.Children
+                      .Where(child => child.GetAttribute("class").Contains("media-user"))
+                      .FirstOrDefault()
+                      ?.Children
+                      .Where(child => child.GetAttribute("class") == "media-left")
+                      .FirstOrDefault()
+                      ?.Children
+                      .FirstOrDefault()
+                      ?.GetAttribute("data-href");
 
-        if (userUrl.Contains('-'))
-        {
-            var startIndex = userUrl.IndexOf('=') + 1;
-            var endIndex = userUrl.IndexOf('-', startIndex);
-            userUrl = userUrl.Substring(startIndex, endIndex - startIndex);
-        }
-        else
-            userUrl = userUrl.Substring(userUrl.IndexOf('=') + 1);
-
-        int.TryParse(userUrl, NumberStyles.Number, CultureInfo.InvariantCulture, out int userWebId);
+        int.TryParse(
+            userUrl
+            .Split("users/")?[1]
+            .Trim('/'),
+            NumberStyles.Number,
+            CultureInfo.InvariantCulture,
+            out int userWebId);
 
         return userWebId;
     }

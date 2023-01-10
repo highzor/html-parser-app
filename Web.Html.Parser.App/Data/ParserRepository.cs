@@ -8,7 +8,7 @@ namespace Web.Html.Parser.App.Data;
 public interface IParserRepository
 {
     Task<Guid> AddGetGame(int gameWebId, string gameName);
-    Task<Guid> AddUpdateGameItem(Guid gameId, string gameItemTitle);
+    Task<Guid> AddGameItem(Guid gameId, string gameItemTitle);
     Task<Guid> AddUpdateUser(int userWebId, string userName);
     Task<Guid> AddUpdateItem(Guid userId, Guid gameId, string description);
     Task<Guid> AddUpdateItemPrice(Guid itemId, double price, int count);
@@ -67,9 +67,32 @@ public class ParserRepository : IParserRepository
         });
     }
 
-    public async Task<Guid> AddUpdateGameItem(Guid gameId, string gameItemTitle)
+    public async Task<Guid> AddGameItem(Guid gameId, string gameItemTitle)
     {
-        return Guid.Empty;
+        using var connection = createConnection();
+
+        return await connection.QueryFirstOrDefaultAsync<Guid>(@"
+                INSERT INTO game_item
+                (
+	                id,
+	                game_id,
+	                title
+                )
+                SELECT 
+	                 uuid_generate_v4(),
+	                 @gameId ,
+	                 @gameItemTitle
+                WHERE NOT EXISTS
+                (
+	                SELECT 
+		                 title
+	                FROM game_item
+	                WHERE game_id = @gameId AND title = @gameItemTitle
+                )", new
+        {
+            gameId,
+            gameItemTitle
+        });
     }
 
     public async Task<Guid> AddUpdateUser(int userWebId, string userName)

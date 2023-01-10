@@ -75,7 +75,6 @@ public class ParserManager : IParserManager
                            .Trim();
 
             int.TryParse(gameDivContainer?.GetAttribute("data-id"), NumberStyles.Number, CultureInfo.InvariantCulture, out int gameWebId);
-            //Console.WriteLine($"process is executing at the game: {gameName}");
             return await _parserRepository.AddGetGame(gameWebId, gameName);
         }
         catch (Exception ex)
@@ -117,7 +116,6 @@ public class ParserManager : IParserManager
                                 ?.TextContent
                                 .Trim();
 
-            //Console.WriteLine($"process is executing at the game item: {gameItemTitle}");
             var gameItemId = await _parserRepository.AddGameItem(gameId, gameItemTitle);
 
             return gameItemHref;

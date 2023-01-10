@@ -12,31 +12,33 @@ public class ParserApplication
     }
     public async Task Start(string url)
     {
+        var document = await _parserManager.GetDocument(url);
+        var games = _parserManager.GetGames(document);
+        var gameCount = 0;
+        var startTime = DateTime.Now;
+
+        foreach (var game in games)
         {
-            var document = await _parserManager.GetDocument(url);
-            var games = _parserManager.GetGames(document);
+            var gameId = await _parserManager.AddGetGame(game);
+            var gameItems = _parserManager.GetGameItems(game);
 
-
-            foreach (var game in games)
+            foreach (var gameItem in gameItems)
             {
-                var gameId = await _parserManager.AddGetGame(game);
-                var gameItems = _parserManager.GetGameItems(game);
+                var gameItemHref = await _parserManager.AddGameItem(gameId, gameItem);
+                document = await _parserManager.GetDocument(gameItemHref);
+                var items = _parserManager.GetItems(document);
 
-                foreach (var gameItem in gameItems)
+                foreach (var item in items)
                 {
-                    var gameItemHref = await _parserManager.AddGameItem(gameId, gameItem);
-                    document = await _parserManager.GetDocument(gameItemHref);
-                    var items = _parserManager.GetItems(document);
-
-                    foreach (var item in items)
-                    {
-                        var userId = await _parserManager.AddUpdateUser(item);
-                        var description = _parserManager.GetItemDescription(item);
-                        var itemId = await _parserManager.AddUpdateItem(userId, gameId, description);
-                        var itemPriceId = _parserManager.AddUpdateItemPrice(itemId, item);
-                    }
+                    var userId = await _parserManager.AddGetUser(item);
+                    var description = _parserManager.GetItemDescription(item);
+                    var itemId = await _parserManager.AddGetItem(userId, gameId, description);
+                    _parserManager.AddGetItemPrice(itemId, item);
                 }
             }
+
+            Console.WriteLine($"{++gameCount} games processed out of {games.Count}");
         }
+        Console.WriteLine($"total time: {DateTime.Now - startTime}");
     }
 }

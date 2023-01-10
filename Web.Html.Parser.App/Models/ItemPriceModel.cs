@@ -6,5 +6,6 @@ public class ItemPriceModel
     public Guid ItemId { get; set; }
     public double Price { get; set; }
     public int Count { get; set; }
+    public bool IsSingle { get; set; }
     public DateTime DateTimeUpdate { get; set; }
 }

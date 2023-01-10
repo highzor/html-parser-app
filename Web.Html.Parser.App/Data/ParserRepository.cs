@@ -9,9 +9,9 @@ public interface IParserRepository
 {
     Task<Guid> AddGetGame(int gameWebId, string gameName);
     Task<Guid> AddGameItem(Guid gameId, string gameItemTitle);
-    Task<Guid> AddUpdateUser(int userWebId, string userName);
-    Task<Guid> AddUpdateItem(Guid userId, Guid gameId, string description);
-    Task<Guid> AddUpdateItemPrice(Guid itemId, double price, int count);
+    Task<Guid> AddGetUser(int userWebId, string userName);
+    Task<Guid> AddGetItem(Guid userId, Guid gameId, string description);
+    Task<Guid> AddGetItemPrice(Guid itemId, double price, bool isSingle, int count);
 }
 
 public class ParserRepository : IParserRepository
@@ -34,7 +34,8 @@ public class ParserRepository : IParserRepository
 		                 id,
 		                 game_web_id
 	                FROM game
-	                WHERE game_web_id = @gameWebId
+	                WHERE 
+                        game_web_id = @gameWebId
                 ),
                 target AS 
                 (
@@ -80,14 +81,16 @@ public class ParserRepository : IParserRepository
                 )
                 SELECT 
 	                 uuid_generate_v4(),
-	                 @gameId ,
+	                 @gameId,
 	                 @gameItemTitle
                 WHERE NOT EXISTS
                 (
 	                SELECT 
 		                 title
 	                FROM game_item
-	                WHERE game_id = @gameId AND title = @gameItemTitle
+	                WHERE 
+                        game_id = @gameId 
+                        AND title = @gameItemTitle
                 )", new
         {
             gameId,
@@ -95,19 +98,133 @@ public class ParserRepository : IParserRepository
         });
     }
 
-    public async Task<Guid> AddUpdateUser(int userWebId, string userName)
+    public async Task<Guid> AddGetUser(int userWebId, string userName)
     {
-        return Guid.Empty;
+        using var connection = createConnection();
+
+        return await connection.QueryFirstOrDefaultAsync<Guid>(@"
+               WITH source AS
+                (
+	                SELECT 
+		                 id,
+		                 user_web_id
+	                FROM users
+	                WHERE 
+                        user_web_id = @userWebId
+                ),
+                target AS 
+                (
+	                INSERT INTO users
+	                (
+		                id,
+		                user_web_id,
+		                user_name
+	                )
+	                SELECT 
+		                 uuid_generate_v4(),
+		                 @userWebId, 
+		                 @userName
+	                WHERE NOT EXISTS
+	                (
+		                SELECT 1 FROM source
+	                )
+	                RETURNING id
+                )
+                SELECT 
+	                 id
+                FROM target 
+                UNION ALL
+                SELECT 
+	                 id
+                FROM source", new
+        {
+            userWebId,
+            userName
+        });
     }
 
-    public async Task<Guid> AddUpdateItem(Guid userId, Guid gameId, string description)
+    public async Task<Guid> AddGetItem(Guid userId, Guid gameId, string description)
     {
-        return Guid.Empty;
+        using var connection = createConnection();
+
+        return await connection.QueryFirstOrDefaultAsync<Guid>(@"
+                WITH source AS
+                (
+	                SELECT 
+		                 id,
+		                 seller_id,
+                         game_id,
+                         description
+	                FROM item
+	                WHERE 
+                        seller_id = @userId
+                        AND game_id = @gameId
+                        AND description = @description
+                ),
+                target AS 
+                (
+	                INSERT INTO item
+	                (
+		                id,
+		                seller_id,
+                        game_id,
+                        description
+	                )
+	                SELECT 
+		                 uuid_generate_v4(),
+		                 @userId, 
+		                 @gameId,
+                         @description
+	                WHERE NOT EXISTS
+	                (
+		                SELECT 1 FROM source
+	                )
+	                RETURNING id
+                )
+                SELECT 
+	                 id
+                FROM target 
+                UNION ALL
+                SELECT 
+	                 id
+                FROM source", new
+        {
+            userId,
+            gameId,
+            description
+        });
     }
 
-    public async Task<Guid> AddUpdateItemPrice(Guid itemId, double price, int count)
+    public async Task<Guid> AddGetItemPrice(Guid itemId, double price, bool isSingle, int count)
     {
-        return Guid.Empty;
+        using var connection = createConnection();
+
+        return await connection.QueryFirstOrDefaultAsync<Guid>(@"  
+                INSERT INTO item_price
+                (
+	                id,
+	                item_id,
+                    price,
+                    is_single,
+                    count,
+                    date_time_update
+                )
+                VALUES 
+                (
+	                uuid_generate_v4(),
+	                @itemId, 
+	                @price,
+                    @isSingle,
+                    @count,
+                    now()
+                )
+                RETURNING id", new
+        {
+            itemId,
+            price,
+            isSingle,
+            count
+        });
     }
 
     private IDbConnection createConnection()

@@ -9,7 +9,7 @@ public interface IParserManager
 {
     Task<IDocument> GetDocument(string url);
     IList<IElement> GetGames(IDocument document);
-    Task<Guid> AddUpdateGame(IElement game);
+    Task<Guid> AddGetGame(IElement game);
     IList<IElement> GetGameItems(IElement game);
     Task<string> AddUpdateGameItem(Guid gameId, IElement gameItem);
     IList<IElement> GetItems(IDocument document);
@@ -58,7 +58,7 @@ public class ParserManager : IParserManager
         }
     }
 
-    public async Task<Guid> AddUpdateGame(IElement game)
+    public async Task<Guid> AddGetGame(IElement game)
     {
         try
         {
@@ -76,7 +76,7 @@ public class ParserManager : IParserManager
 
             int.TryParse(gameDivContainer?.GetAttribute("data-id"), NumberStyles.Number, CultureInfo.InvariantCulture, out int gameWebId);
             Console.WriteLine($"process is executing at the game: {gameName}");
-            return await _parserRepository.AddUpdateGame(gameWebId, gameName);
+            return await _parserRepository.AddGetGame(gameWebId, gameName);
         }
         catch (Exception ex)
         {
@@ -108,9 +108,9 @@ public class ParserManager : IParserManager
         try
         {
             var gameItemLinkElement = gameItem
-                                          .Children
-                                          .Where(child => child.LocalName == "a")
-                                          .FirstOrDefault();
+                                      .Children
+                                      .Where(child => child.LocalName == "a")
+                                      .FirstOrDefault();
 
             var gameItemHref = gameItemLinkElement?.GetAttribute("href");
             var gameItemTitle = gameItemLinkElement
@@ -263,7 +263,7 @@ public class ParserManager : IParserManager
         }
         else
             userUrl = userUrl.Substring(userUrl.IndexOf('=') + 1);
-        
+
         int.TryParse(userUrl, NumberStyles.Number, CultureInfo.InvariantCulture, out int userWebId);
 
         return userWebId;

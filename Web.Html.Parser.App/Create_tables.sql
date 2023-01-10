@@ -11,7 +11,7 @@ CREATE TABLE public.game
 ALTER TABLE IF EXISTS public.game
     OWNER to postgres;
 
-CREATE TABLE public.gameItem
+CREATE TABLE public.game_item
 (
     id uuid NOT NULL,
     game_id uuid NOT NULL,
@@ -36,7 +36,7 @@ CREATE TABLE public.item
     PRIMARY KEY (id)
 );
 
-CREATE TABLE public.itemPrice
+CREATE TABLE public.item_price
 (
     id uuid NOT NULL,
     item_id uuid NOT NULL,

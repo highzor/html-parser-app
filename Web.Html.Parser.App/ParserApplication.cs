@@ -1,6 +1,4 @@
 ﻿using Web.Html.Parser.App.Domain;
-using Microsoft.Extensions.Configuration;
-using Web.Html.Parser.App.Models.Configuration;
 
 namespace Web.Html.Parser.App;
 
@@ -21,7 +19,7 @@ public class ParserApplication
 
             foreach (var game in games)
             {
-                var gameId = await _parserManager.AddUpdateGame(game);
+                var gameId = await _parserManager.AddGetGame(game);
                 var gameItems = _parserManager.GetGameItems(game);
 
                 foreach (var gameItem in gameItems)

@@ -8,9 +8,6 @@ CREATE TABLE public.game
     PRIMARY KEY (id)
 );
 
-ALTER TABLE IF EXISTS public.game
-    OWNER to postgres;
-
 CREATE TABLE public.game_item
 (
     id uuid NOT NULL,
@@ -43,6 +40,6 @@ CREATE TABLE public.item_price
 	price double precision NOT NULL,
 	count integer NOT NULL,
     is_single boolean NOT NULL,
-    date_time_update time with time zone NOT NULL,
+    date_time_update timestamp with time zone NOT NULL,
     PRIMARY KEY (id)
 );

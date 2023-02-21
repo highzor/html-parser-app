@@ -18,6 +18,13 @@ internal class Program
         var connectionStrings = config.GetSection("ConnectionStrings").Get<ConnectionStrings>();
         connectionStrings.PostgresDatabase = connectionStrings.PostgresDatabase.Replace("[password]", Environment.GetEnvironmentVariable("postgres"));
 
-        new ParserApplication(new ParserManager(new ParserRepository(connectionStrings.PostgresDatabase))).Start(appSettings.Url).GetAwaiter().GetResult();
+        Console.WriteLine("Enter '1' for start parsing, '2' for calculator: ");
+        ConsoleKeyInfo key = Console.ReadKey();
+        Console.WriteLine("You pressed {0}", key.KeyChar);
+
+        if (key.KeyChar == '1')
+            new ParserApplication(new ParserManager(new ParserRepository(connectionStrings.PostgresDatabase))).Start(appSettings.Url).GetAwaiter().GetResult();
+        else
+            new CalculatorApplication(new CalculatorManager(new CalculatorRepository(connectionStrings.PostgresDatabase))).Start().GetAwaiter().GetResult();
     }
 }
